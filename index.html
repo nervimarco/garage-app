@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Garage App</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+
+    <h1>Garage App</h1>
+
+    <p><strong>File attuale:</strong> <span id="fileStatus">Nessun file caricato</span></p>
+
+    <input type="file" id="fileInput" accept=".xlsx">
+    <button onclick="resetFile()">Reset file salvato</button>
+
+    <br><br>
+
+    <input id="searchInput" type="text" placeholder="Cerca..." oninput="searchItems()">
+
+    <div id="results"></div>
+
+    <div id="details"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

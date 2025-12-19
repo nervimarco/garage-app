@@ -1,0 +1,34 @@
+body {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+}
+
+#searchInput {
+    width: 250px;
+    padding: 8px;
+    font-size: 16px;
+}
+
+#results {
+    margin-top: 20px;
+}
+
+.result-item {
+    padding: 8px;
+    background: #f0f0f0;
+    margin-bottom: 5px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.result-item:hover {
+    background: #e0e0e0;
+}
+
+.details-box {
+    margin-top: 20px;
+    padding: 15px;
+    background: #dfefff;
+    border-radius: 6px;
+    border: 1px solid #aaccee;
+}
