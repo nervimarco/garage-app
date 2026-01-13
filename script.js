@@ -23,24 +23,27 @@ document.getElementById("fileInput").addEventListener("change", function (e) {
     const file = e.target.files[0];
     const reader = new FileReader();
 
-    reader.onload = function (event) {
-        const binary = event.target.result;
-        const workbook = XLSX.read(binary, { type: "binary" });
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        data = XLSX.utils.sheet_to_json(sheet);
+   reader.onload = function (event) {
+    const arrayBuffer = event.target.result;
+    const dataArray = new Uint8Array(arrayBuffer);
 
-        console.log("Dati caricati:", data);
+    const workbook = XLSX.read(dataArray, { type: "array" });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    data = XLSX.utils.sheet_to_json(sheet, { defval: "" });
 
-        // ✅ Salva il file in localStorage in base64
-        const base64 = btoa(binary);
-        localStorage.setItem("savedExcel", base64);
+    console.log("Dati caricati:", data);
 
-        // ✅ Salva anche il nome del file
-        localStorage.setItem("savedExcelName", file.name);
-        document.getElementById("fileStatus").textContent = file.name;
-    };
+    // Salvataggio in base64
+    const base64 = btoa(
+        String.fromCharCode(...new Uint8Array(arrayBuffer))
+    );
+    localStorage.setItem("savedExcel", base64);
 
-    reader.readAsBinaryString(file);
+    localStorage.setItem("savedExcelName", file.name);
+    document.getElementById("fileStatus").textContent = file.name;
+};
+
+reader.readAsArrayBuffer(file);
 });
 
 // ✅ Ricarica il file salvato in localStorage
@@ -112,4 +115,5 @@ function resetFile() {
     localStorage.removeItem("savedExcelName");
     document.getElementById("fileStatus").textContent = "Nessun file caricato";
     alert("File salvato cancellato. Ricarica la pagina.");
+
 }
