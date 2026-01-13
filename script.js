@@ -8,13 +8,8 @@ window.addEventListener("load", () => {
     if (savedFile) {
         loadSavedFile(savedFile);
 
-        if (savedName) {
-            document.getElementById("fileStatus").textContent =
-                savedName + " (caricato automaticamente)";
-        } else {
-            document.getElementById("fileStatus").textContent =
-                "File caricato automaticamente";
-        }
+        document.getElementById("fileStatus").textContent =
+            savedName ? savedName + " (caricato automaticamente)" : "File caricato automaticamente";
     }
 });
 
@@ -23,34 +18,33 @@ document.getElementById("fileInput").addEventListener("change", function (e) {
     const file = e.target.files[0];
     const reader = new FileReader();
 
-   reader.onload = function (event) {
-    const arrayBuffer = event.target.result;
-    const dataArray = new Uint8Array(arrayBuffer);
+    reader.onload = function (event) {
+        const arrayBuffer = event.target.result;
+        const uint8 = new Uint8Array(arrayBuffer);
 
-    const workbook = XLSX.read(dataArray, { type: "array" });
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    data = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+        // 📌 Lettura moderna e stabile
+        const workbook = XLSX.read(uint8, { type: "array" });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        data = XLSX.utils.sheet_to_json(sheet, { defval: "" });
 
-    console.log("Dati caricati:", data);
+        console.log("Dati caricati:", data);
 
-    // Salvataggio in base64
-    const base64 = btoa(
-        String.fromCharCode(...new Uint8Array(arrayBuffer))
-    );
-    localStorage.setItem("savedExcel", base64);
+        // 📌 Salvataggio coerente in base64
+        const base64 = XLSX.write(workbook, { type: "base64", bookType: "xlsx" });
+        localStorage.setItem("savedExcel", base64);
+        localStorage.setItem("savedExcelName", file.name);
 
-    localStorage.setItem("savedExcelName", file.name);
-    document.getElementById("fileStatus").textContent = file.name;
-};
+        document.getElementById("fileStatus").textContent = file.name;
+    };
 
-reader.readAsArrayBuffer(file);
+    reader.readAsArrayBuffer(file);
 });
 
 // ✅ Ricarica il file salvato in localStorage
 function loadSavedFile(base64) {
     const workbook = XLSX.read(base64, { type: "base64" });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    data = XLSX.utils.sheet_to_json(sheet);
+    data = XLSX.utils.sheet_to_json(sheet, { defval: "" });
 
     console.log("Dati ricaricati automaticamente:", data);
 }
@@ -59,13 +53,10 @@ function loadSavedFile(base64) {
 function searchItems() {
     const input = document.getElementById("searchInput").value.toLowerCase();
 
-    if (!data || data.length === 0) {
-        return;
-    }
+    if (!data || data.length === 0) return;
 
     const results = data.filter(item =>
-        item.Cosa &&
-        item.Cosa.toLowerCase().includes(input)
+        item.Cosa && item.Cosa.toLowerCase().includes(input)
     );
 
     displayResults(results);
@@ -77,14 +68,13 @@ function displayResults(results) {
     container.innerHTML = "";
 
     const details = document.getElementById("details");
-    details.innerHTML = ""; // pulisce i dettagli quando fai una nuova ricerca
+    details.innerHTML = "";
 
     results.forEach(item => {
         const div = document.createElement("div");
         div.className = "result-item";
         div.textContent = item.Cosa;
 
-        // ✅ Quando clicchi un risultato, mostra i dettagli completi
         div.onclick = () => showDetails(item);
 
         container.appendChild(div);
@@ -115,5 +105,4 @@ function resetFile() {
     localStorage.removeItem("savedExcelName");
     document.getElementById("fileStatus").textContent = "Nessun file caricato";
     alert("File salvato cancellato. Ricarica la pagina.");
-
 }
