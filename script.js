@@ -58,10 +58,10 @@ function searchItems() {
 
     if (!data || data.length === 0) return;
 
-    const results = data.filter(item =>
-        item.Cosa &&
-        String(item.Cosa).toLowerCase().includes(input)
-    );
+    const results = data.filter(item => {
+        const value = item.Cosa ?? "";
+        return String(value).toLowerCase().includes(input);
+    });
 
     displayResults(results);
 }
