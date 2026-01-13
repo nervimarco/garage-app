@@ -6,10 +6,19 @@ window.addEventListener("load", () => {
     const savedName = localStorage.getItem("savedExcelName");
 
     if (savedFile) {
-        loadSavedFile(savedFile);
+        try {
+            const workbook = XLSX.read(savedFile, { type: "base64" });
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            data = XLSX.utils.sheet_to_json(sheet, { defval: "" });
 
-        document.getElementById("fileStatus").textContent =
-            savedName ? savedName + " (caricato automaticamente)" : "File caricato automaticamente";
+            console.log("Dati ricaricati automaticamente:", data);
+
+            document.getElementById("fileStatus").textContent =
+                savedName ? `${savedName} (caricato automaticamente)` : "File caricato automaticamente";
+        } catch (error) {
+            console.error("Errore nel ricaricare il file:", error);
+            document.getElementById("fileStatus").textContent = "Errore nel caricamento automatico";
+        }
     }
 });
 
@@ -19,35 +28,29 @@ document.getElementById("fileInput").addEventListener("change", function (e) {
     const reader = new FileReader();
 
     reader.onload = function (event) {
-        const arrayBuffer = event.target.result;
-        const uint8 = new Uint8Array(arrayBuffer);
+        try {
+            const arrayBuffer = event.target.result;
+            const uint8 = new Uint8Array(arrayBuffer);
 
-        // 📌 Lettura moderna e stabile
-        const workbook = XLSX.read(uint8, { type: "array" });
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        data = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+            const workbook = XLSX.read(uint8, { type: "array" });
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            data = XLSX.utils.sheet_to_json(sheet, { defval: "" });
 
-        console.log("Dati caricati:", data);
+            console.log("Dati caricati:", data);
 
-        // 📌 Salvataggio coerente in base64
-        const base64 = XLSX.write(workbook, { type: "base64", bookType: "xlsx" });
-        localStorage.setItem("savedExcel", base64);
-        localStorage.setItem("savedExcelName", file.name);
+            const base64 = XLSX.write(workbook, { type: "base64", bookType: "xlsx" });
+            localStorage.setItem("savedExcel", base64);
+            localStorage.setItem("savedExcelName", file.name);
 
-        document.getElementById("fileStatus").textContent = file.name;
+            document.getElementById("fileStatus").textContent = file.name;
+        } catch (error) {
+            console.error("Errore nel caricamento del file:", error);
+            document.getElementById("fileStatus").textContent = "Errore nel caricamento";
+        }
     };
 
     reader.readAsArrayBuffer(file);
 });
-
-// ✅ Ricarica il file salvato in localStorage
-function loadSavedFile(base64) {
-    const workbook = XLSX.read(base64, { type: "base64" });
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    data = XLSX.utils.sheet_to_json(sheet, { defval: "" });
-
-    console.log("Dati ricaricati automaticamente:", data);
-}
 
 // ✅ Ricerca parziale sulla colonna "Cosa"
 function searchItems() {
@@ -56,7 +59,8 @@ function searchItems() {
     if (!data || data.length === 0) return;
 
     const results = data.filter(item =>
-        item.Cosa && item.Cosa.toLowerCase().includes(input)
+        item.Cosa &&
+        String(item.Cosa).toLowerCase().includes(input)
     );
 
     displayResults(results);
@@ -73,10 +77,9 @@ function displayResults(results) {
     results.forEach(item => {
         const div = document.createElement("div");
         div.className = "result-item";
-        div.textContent = item.Cosa;
+        div.textContent = String(item.Cosa);
 
         div.onclick = () => showDetails(item);
-
         container.appendChild(div);
     });
 }
@@ -90,7 +93,6 @@ function showDetails(item) {
     box.className = "details-box";
 
     let html = "<h3>Dettagli</h3>";
-
     for (let key in item) {
         html += `<p><strong>${key}:</strong> ${item[key]}</p>`;
     }
